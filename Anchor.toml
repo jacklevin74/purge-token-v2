@@ -1,0 +1,28 @@
+[toolchain]
+anchor_version = "0.30.1"
+
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+purge = "6K6md8GFmT8fncNbWqHSJrduYfG6HgnFCp34jdouGVSM"
+
+[programs.mainnet]
+purge = "6K6md8GFmT8fncNbWqHSJrduYfG6HgnFCp34jdouGVSM"
+
+# New mint with correct PDA authority: 2H6kcFg45gsng4m9PDz31knqPCJXSWyDK6Gv783uu4Yb
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "https://rpc.mainnet.x1.xyz"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+deploy = "ts-node scripts/deploy.ts"
+
+[test]
+startup_wait = 10000
