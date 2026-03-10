@@ -17,15 +17,17 @@ pub mod purge {
     use super::*;
 
     /// Initialize global state — called once at deployment
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    /// `mint` is the PURGE SPL token mint address — stored and enforced on all reward claims
+    pub fn initialize(ctx: Context<Initialize>, mint: Pubkey) -> Result<()> {
         let global_state = &mut ctx.accounts.global_state;
         global_state.total_minters = 0;
         global_state.total_x_burnt = 0;
         global_state.active_mints = 0;
         global_state.genesis_ts = Clock::get()?.unix_timestamp;
+        global_state.mint = mint;
         global_state.bump = ctx.bumps.global_state;
 
-        msg!("PURGE initialized. Genesis: {}", global_state.genesis_ts);
+        msg!("PURGE initialized. Genesis: {}, Mint: {}", global_state.genesis_ts, mint);
         Ok(())
     }
 
@@ -284,7 +286,10 @@ pub struct ClaimMintReward<'info> {
     #[account(mut, seeds = [b"global_state"], bump = global_state.bump)]
     pub global_state: Account<'info, GlobalState>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = global_state.mint @ PurgeError::InvalidMint,
+    )]
     pub mint: Account<'info, Mint>,
 
     /// CHECK: PDA used as mint authority — verified by seeds
@@ -315,11 +320,12 @@ pub struct GlobalState {
     pub total_x_burnt: u64,   // reserved for future burn mechanics
     pub active_mints: u64,
     pub genesis_ts: i64,
+    pub mint: Pubkey,         // PURGE SPL token mint — enforced on all reward claims
     pub bump: u8,
 }
 
 impl GlobalState {
-    pub const SIZE: usize = 8 + 8 + 8 + 8 + 1;
+    pub const SIZE: usize = 8 + 8 + 8 + 8 + 32 + 1;
 }
 
 /// One PDA per wallet — tracks slot allocation
@@ -368,4 +374,6 @@ pub enum PurgeError {
     Unauthorized,
     #[msg("Reward calculation overflow — contact protocol team.")]
     RewardOverflow,
+    #[msg("Invalid mint — does not match the PURGE token mint registered at initialization.")]
+    InvalidMint,
 }
