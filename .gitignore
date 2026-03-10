@@ -1,0 +1,6 @@
+node_modules/
+target/
+.anchor/
+.env
+*.keypair.json
+program-keypair.json
